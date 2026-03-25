@@ -3,45 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Color Snap</title>
+    <title>Color Snap - Fridge Combo</title>
     <link rel="apple-touch-icon" href="image_22.png">
     <link rel="icon" type="image/png" href="image_22.png">
     <style>
         :root {
             --bg: #fff;
-            --main: #333;
+            --main: #333; /* #333固定 */
             --accent: #eee;
             --radius: 15px;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
+        
         body {
-            margin: 0; background-color: var(--bg); color: var(--main);
+            background-color: var(--bg);
+            color: var(--main);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
-            padding: calc(15px + env(safe-area-inset-top)) 15px calc(15px + env(safe-area-inset-bottom)) 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            /* iPhoneノッチ回避余白 */
+            padding-top: calc(env(safe-area-inset-top, 20px) + 15px); 
+            padding-left: 15px;
+            padding-right: 15px;
+            padding-bottom: calc(env(safe-area-inset-bottom, 10px) + 15px);
         }
 
-        .fridge-container { width: 100%; max-width: 420px; text-align: center; display: flex; flex-direction: column; }
-        
+        .fridge-container {
+            width: 100%;
+            max-width: 420px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ★復活：ヘッダー */
+        header { text-align: center; margin-bottom: 25px; }
+        h1 { font-size: 2rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px; }
+        .subtitle { color: #999; font-size: 0.85rem; font-weight: 500; }
+
         /* Drop & Preview Area */
         .preview-container {
-            width: 100%; aspect-ratio: 1 / 1; background: #fafafa;
-            border: 2px dashed var(--accent); border-radius: var(--radius);
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden; position: relative; margin-bottom: 10px; cursor: pointer;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background: #fafafa;
+            border: 2px dashed var(--accent);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
+        .preview-container.active { border-color: var(--main); background: #f0f0f0; }
         .preview-container img { width: 100%; height: 100%; object-fit: contain; display: none; touch-action: none; }
-        .drop-label { color: #aaa; font-size: 0.9rem; font-weight: 600; padding: 20px; text-align: center;}
+        .drop-label { color: #aaa; font-size: 0.9rem; font-weight: 600; padding: 20px; text-align: center; z-index: 10; }
 
-        /* Zoom Loupe (Hybrid) */
+        /* Zoom Loupe */
         #loupe {
             position: absolute; width: 100px; height: 100px;
             border-radius: 50%; border: 3px solid #fff;
             box-shadow: 0 0 10px rgba(0,0,0,0.3); display: none;
             pointer-events: none; overflow: hidden; z-index: 100;
         }
-        #loupe-canvas { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); image-rendering: pixelated; }
+        #loupe-canvas { 
+            position: absolute; top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); 
+            image-rendering: pixelated; /* ピクセルを鮮明に */
+        }
         .crosshair {
             position: absolute; top: 0; left: 0; width: 100px; height: 100px;
             pointer-events: none; z-index: 101;
@@ -53,7 +87,7 @@
         .crosshair::after { width: 1px; height: 100%; top: 0; left: 50%; transform: translateX(-50%); }
 
         /* Clear Function */
-        .clear-btn-wrap { text-align: right; margin-bottom: 15px; display: none;}
+        .clear-btn-wrap { text-align: right; margin-bottom: 15px; display: none; width: 100%; }
         .clear-link { font-size: 0.8rem; color: #999; cursor: pointer; text-decoration: underline; }
 
         /* Results */
@@ -68,25 +102,28 @@
         .hex-value { font-size: 1.1rem; font-weight: 800; color: var(--main); }
 
         .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin-bottom: 25px; }
-        .palette-item { aspect-ratio: 1/1; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); }
+        .palette-item { aspect-ratio: 1/1; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); transition: transform 0.1s; }
+        .palette-item:active { transform: scale(0.9); }
 
-        /* Common Parts */
-        .footer-btns { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: auto; padding: 20px 0; }
-        .kofi-btn, .home-btn {
-            display: inline-flex; align-items: center; padding: 12px 20px;
-            border-radius: var(--radius); font-weight: bold; font-size: 0.8rem; text-decoration: none;
-        }
-        .kofi-btn { background: var(--main); color: #fff; }
-        .home-btn { background: var(--accent); color: var(--main); border: none; cursor: pointer; }
-        footer { font-size: 0.7rem; color: #bbb; line-height: 1.6; padding-bottom: 10px; text-align: center;}
-        
+        /* Feedback Toast */
         #toast {
             position: fixed; bottom: 80px; background: rgba(0,0,0,0.8); color: #fff;
             padding: 8px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;
             opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 200;
         }
 
-        /* Modal (固定仕様:憲法遵守) */
+        /* Footer */
+        .footer-btns { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: auto; padding: 20px 0; width: 100%; }
+        .kofi-btn, .home-btn {
+            display: inline-flex; align-items: center; padding: 12px 20px;
+            border-radius: var(--radius); font-weight: bold; font-size: 0.85rem; text-decoration: none;
+        }
+        .kofi-btn { background: var(--main); color: #fff; }
+        .home-btn { background: var(--accent); color: var(--main); border: none; cursor: pointer; }
+
+        footer { font-size: 0.7rem; color: #bbb; line-height: 1.6; padding-bottom: 10px; text-align: center; }
+
+        /* Modal (固定仕様) */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { 
             background: #fff; padding: 30px; border-radius: 20px; 
@@ -101,6 +138,11 @@
 <body>
 
 <div class="fridge-container">
+    <header>
+        <h1>Color Snap</h1>
+        <p class="subtitle">Extract palette from images instantly.</p>
+    </header>
+
     <div class="preview-container" id="dropZone">
         <p class="drop-label" id="dropLabel">Tap to select image<br><span style="font-size: 0.7rem; font-weight: normal;">(Drag on image to pick specific pixel)</span></p>
         <img id="preview" alt="Preview">
@@ -186,9 +228,22 @@
 
     const ZOOM_SCALE = 8; // Zoom level
 
-    // 1. File Selection
-    dropZone.onclick = (e) => { if(e.target !== preview && !preview.src) fileInput.click(); };
+    // 1. File Selection & ★修正：タップ感度の改善
+    dropZone.onclick = (e) => {
+        // 画像が表示されていない時、またはラベルがタップされた時にファイル選択を開く
+        if (!preview.src || preview.style.display === 'none' || e.target.id === 'dropLabel') {
+            fileInput.click();
+        }
+    };
     fileInput.onchange = (e) => handleImage(e.target.files[0]);
+
+    // Drag & Drop
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('active'); };
+    dropZone.ondragleave = () => { dropZone.classList.remove('active'); };
+    dropZone.ondrop = (e) => {
+        e.preventDefault(); dropZone.classList.remove('active');
+        handleImage(e.dataTransfer.files[0]);
+    };
 
     // 2. Clear Function
     clearImage.onclick = () => {
@@ -196,6 +251,8 @@
         document.getElementById('dropLabel').style.display = 'block';
         resultSection.style.display = 'none'; clearWrap.style.display = 'none';
         fileInput.value = ''; loupe.style.display = 'none';
+        // z-indexをリセットしてタップできるように
+        dropZone.style.zIndex = '';
     };
 
     // 3. Image Handling & Auto Palette (A)
@@ -207,6 +264,8 @@
             preview.style.display = 'block';
             document.getElementById('dropLabel').style.display = 'none';
             resultSection.style.display = 'block'; clearWrap.style.display = 'block';
+            // 画像が読み込まれたらz-indexを調整してズーム機能を有効に
+            dropZone.style.zIndex = '5';
             
             preview.onload = () => {
                 internalCanvas.width = preview.naturalWidth;
@@ -225,11 +284,13 @@
 
         for (let i = 0; i < data.length; i += 4 * step) {
             if (data[i+3] < 128) continue; // Skip transparent
+            // Simplify color to reduce noise
             const hex = rgbToHex(Math.round(data[i]/15)*15, Math.round(data[i+1]/15)*15, Math.round(data[i+2]/15)*15);
             colorCounts[hex] = (colorCounts[hex] || 0) + 1;
         }
         const sorted = Object.keys(colorCounts).sort((a, b) => colorCounts[b] - colorCounts[a]);
         renderPalette(sorted.slice(0, 5));
+        // Default pick to most frequent (but don't copy)
         updatePicked(sorted[0], false); 
     }
 
@@ -243,63 +304,108 @@
         });
     }
 
-    // 4. Hybrid Zoom Picker (B) - Pro mobile experience
+    // 4. Hybrid Zoom Picker (B) - ★修正：エイミング精度の修正
     let isDragging = false;
 
     function handlePick(e) {
-        initAudioContext(); // For potential sound, if allowed
+        if (!preview.src || preview.style.display === 'none') return;
         const t = e.touches ? e.touches[0] : e;
         const rect = preview.getBoundingClientRect();
-        const offsetX = t.clientX - rect.left;
-        const offsetY = t.clientY - rect.top;
+        
+        // 1. 表示エリア内での相対座標 (px)
+        const displayX = t.clientX - rect.left;
+        const displayY = t.clientY - rect.top;
 
         // Constraint check
-        if (offsetX < 0 || offsetX > rect.width || offsetY < 0 || offsetY > rect.height) {
+        if (displayX < 0 || displayX > rect.width || displayY < 0 || displayY > rect.height) {
             loupe.style.display = 'none'; return;
         }
 
         // Show Loupe
         loupe.style.display = 'block';
-        // Position loupe offset slightly above finger
-        loupe.style.left = `${offsetX - 50}px`;
-        loupe.style.top = `${offsetY - 120}px`;
+        // Position loupe: 指の少し上、中央に
+        loupe.style.left = `${displayX - 50}px`;
+        loupe.style.top = `${displayY - 130}px`; // 120 -> 130 視認性向上のため少し上へ
 
-        // Canvas Coordinates
-        const cvsX = offsetX * (preview.naturalWidth / rect.width);
-        const cvsY = offsetY * (preview.naturalHeight / rect.height);
+        // 2. ★エイミング修正の核心：実際のCanvas座標への変換
+        // object-fit: contain の場合、表示矩形と画像の縦横比がズレる。
+        // preview.naturalWidth / preview.naturalHeight は画像の元サイズ。
+        // rect.width / rect.height は画面上の表示サイズ。
+        
+        // 画像の元サイズと表示サイズの比率
+        const scaleX = preview.naturalWidth / rect.width;
+        const scaleY = preview.naturalHeight / rect.height;
+        
+        // どちらか大きい方の比率に合わせて全体がフィットしている
+        const fitScale = Math.max(scaleX, scaleY);
+        
+        // 画像がCanvasの中央に配置されていると仮定した場合のオフセット (px)
+        const imgDisplayWidth = preview.naturalWidth / fitScale;
+        const imgDisplayHeight = preview.naturalHeight / fitScale;
+        const offsetX = (rect.width - imgDisplayWidth) / 2;
+        const offsetY = (rect.height - imgDisplayHeight) / 2;
 
-        // Render Zoom Canvas (pixelated)
+        // 画像の表示エリア内での座標に変換
+        const imgX = displayX - offsetX;
+        const imgY = displayY - offsetY;
+
+        // 画像の表示エリア外をタップした場合は無視
+        if (imgX < 0 || imgX > imgDisplayWidth || imgY < 0 || imgY > imgDisplayHeight) {
+            loupe.style.display = 'none'; return;
+        }
+
+        // 最終的なCanvas上の座標
+        const cvsX = imgX * fitScale;
+        const cvsY = imgY * fitScale;
+
+        // 3. Render Zoom Canvas (pixelated)
         loupeCtx.save();
         loupeCtx.clearRect(0, 0, 100, 100);
         loupeCtx.translate(50, 50); // Center zoom
         loupeCtx.scale(ZOOM_SCALE, ZOOM_SCALE);
         loupeCtx.imageSmoothingEnabled = false; // Keep pixels sharp
+        
+        // internalCanvasから狙った1ピクセルを抜き出して拡大
         loupeCtx.drawImage(internalCanvas, cvsX, cvsY, 1, 1, -0.5, -0.5, 1, 1);
         loupeCtx.restore();
 
-        // Get exact center pixel color
+        // 4. Get exact center pixel color
         const pixel = ctx.getImageData(cvsX, cvsY, 1, 1).data;
         if (pixel[3] < 10) return; // Skip almost transparent
         const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-        updatePicked(hex, false);
+        updatePicked(hex, false); // 表示を更新するがコピーはしない
     }
 
-    function finalizePick(e) {
-        if (!preview.src) return;
+    function finalizePick() {
+        if (!preview.src || !isDragging) return;
+        isDragging = false;
         loupe.style.display = 'none';
+        // 指を離した瞬間の色を確定してコピー
         copyHex(pickedHex.textContent);
     }
 
-    // Touch/Mouse Events
-    preview.addEventListener('touchstart', (e) => { if(preview.src) { isDragging = true; e.preventDefault(); handlePick(e); }});
-    preview.addEventListener('touchmove', (e) => { if(isDragging) { e.preventDefault(); handlePick(e); }});
-    preview.addEventListener('touchend', () => { isDragging = false; finalizePick(); });
+    // Touch/Mouse Events - ★修正：タッチイベントの競合を回避
+    dropZone.addEventListener('touchstart', (e) => { 
+        if(preview.src && preview.style.display !== 'none') {
+            isDragging = true; e.preventDefault(); handlePick(e);
+        }
+    }, { passive: false });
+
+    dropZone.addEventListener('touchmove', (e) => { 
+        if(isDragging) { e.preventDefault(); handlePick(e); }
+    }, { passive: false });
+
+    dropZone.addEventListener('touchend', finalizePick);
     
     // Mouse fallback for desktop
-    preview.addEventListener('mousedown', (e) => { if(preview.src) { isDragging = true; handlePick(e); }});
-    preview.addEventListener('mousemove', (e) => { if(isDragging) handlePick(e); });
-    preview.addEventListener('mouseup', () => { isDragging = false; finalizePick(); });
-    preview.addEventListener('mouseleave', () => { loupe.style.display = 'none'; });
+    dropZone.addEventListener('mousedown', (e) => { 
+        if(preview.src && preview.style.display !== 'none' && e.target.id === 'preview') {
+            isDragging = true; handlePick(e);
+        }
+    });
+    dropZone.addEventListener('mousemove', (e) => { if(isDragging) handlePick(e); });
+    dropZone.addEventListener('mouseup', finalizePick);
+    dropZone.addEventListener('mouseleave', () => { if(isDragging) finalizePick(); loupe.style.display = 'none'; });
 
     // Common Helpers
     function updatePicked(hex, doCopy) {
@@ -313,6 +419,7 @@
     }
 
     function copyHex(hex) {
+        if (!hex || hex === '#000000' && !preview.src) return; // 初期状態でのコピーを防ぐ
         navigator.clipboard.writeText(hex.toUpperCase()).then(() => {
             showToast(`Copied: ${hex.toUpperCase()}`);
         });
@@ -322,9 +429,6 @@
         toast.textContent = msg; toast.style.opacity = '1';
         setTimeout(() => toast.style.opacity = '0', 1800);
     }
-
-    let audioCtx = null; // Potential future use
-    function initAudioContext() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
 
     // Modal (固定仕様)
     homeBtn.onclick = () => modal.style.display = 'flex';
