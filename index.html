@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Color Snap - Fridge Combo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Color Snap</title>
     <link rel="apple-touch-icon" href="image_22.png">
     <link rel="icon" type="image/png" href="image_22.png">
     <style>
@@ -16,118 +16,122 @@
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body {
-            margin: 0;
-            background-color: var(--bg);
-            color: var(--main);
+            margin: 0; background-color: var(--bg); color: var(--main);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+            padding: calc(15px + env(safe-area-inset-top)) 15px calc(15px + env(safe-area-inset-bottom)) 15px;
         }
 
-        .fridge-container { width: 100%; max-width: 420px; text-align: center; }
-        h1 { font-size: 2rem; margin-bottom: 5px; font-weight: 800; letter-spacing: -1px; }
-        .subtitle { color: #999; font-size: 0.85rem; margin-bottom: 25px; }
-
+        .fridge-container { width: 100%; max-width: 420px; text-align: center; display: flex; flex-direction: column; }
+        
         /* Drop & Preview Area */
-        .drop-zone {
-            width: 100%;
-            aspect-ratio: 1 / 1;
-            background: #fafafa;
-            border: 2px dashed var(--accent);
-            border-radius: var(--radius);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            overflow: hidden;
-            position: relative;
-            margin-bottom: 20px;
+        .preview-container {
+            width: 100%; aspect-ratio: 1 / 1; background: #fafafa;
+            border: 2px dashed var(--accent); border-radius: var(--radius);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; position: relative; margin-bottom: 10px; cursor: pointer;
         }
-        .drop-zone.active { border-color: var(--main); background: #f0f0f0; }
-        .drop-zone img { width: 100%; height: 100%; object-fit: contain; display: none; }
-        .drop-label { color: #aaa; font-size: 0.9rem; font-weight: 600; padding: 20px; }
+        .preview-container img { width: 100%; height: 100%; object-fit: contain; display: none; touch-action: none; }
+        .drop-label { color: #aaa; font-size: 0.9rem; font-weight: 600; padding: 20px; text-align: center;}
 
-        /* Color Results */
+        /* Zoom Loupe (Hybrid) */
+        #loupe {
+            position: absolute; width: 100px; height: 100px;
+            border-radius: 50%; border: 3px solid #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3); display: none;
+            pointer-events: none; overflow: hidden; z-index: 100;
+        }
+        #loupe-canvas { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); image-rendering: pixelated; }
+        .crosshair {
+            position: absolute; top: 0; left: 0; width: 100px; height: 100px;
+            pointer-events: none; z-index: 101;
+        }
+        .crosshair::before, .crosshair::after {
+            content: ''; position: absolute; background: rgba(255,255,255,0.7);
+        }
+        .crosshair::before { width: 100%; height: 1px; top: 50%; left: 0; transform: translateY(-50%); }
+        .crosshair::after { width: 1px; height: 100%; top: 0; left: 50%; transform: translateX(-50%); }
+
+        /* Clear Function */
+        .clear-btn-wrap { text-align: right; margin-bottom: 15px; display: none;}
+        .clear-link { font-size: 0.8rem; color: #999; cursor: pointer; text-decoration: underline; }
+
+        /* Results */
         .result-section { display: none; width: 100%; text-align: left; }
-        .section-label { font-size: 0.75rem; font-weight: 800; color: #bbb; text-transform: uppercase; margin-bottom: 10px; }
+        .section-label { font-size: 0.7rem; font-weight: 800; color: #bbb; text-transform: uppercase; margin-bottom: 8px; }
 
-        /* Picked Color (Hybrid) */
         .picked-box {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: #fafafa;
-            padding: 15px;
-            border-radius: var(--radius);
-            margin-bottom: 20px;
-            border: 1px solid var(--accent);
+            display: flex; align-items: center; gap: 12px; background: #fafafa;
+            padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--accent);
         }
-        .color-preview { width: 50px; height: 50px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); }
-        .color-info { flex: 1; }
-        .hex-value { font-size: 1.2rem; font-weight: 800; color: var(--main); }
+        .color-preview { width: 45px; height: 45px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); }
+        .hex-value { font-size: 1.1rem; font-weight: 800; color: var(--main); }
 
-        /* Auto Palette */
-        .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 30px; }
-        .palette-item {
-            aspect-ratio: 1/1;
-            border-radius: 10px;
-            cursor: pointer;
-            border: 1px solid rgba(0,0,0,0.05);
-            transition: transform 0.1s;
-        }
-        .palette-item:active { transform: scale(0.9); }
+        .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin-bottom: 25px; }
+        .palette-item { aspect-ratio: 1/1; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); }
 
-        /* Feedback Toast */
-        #toast {
-            position: fixed; bottom: 100px; background: var(--main); color: #fff;
-            padding: 10px 20px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;
-            opacity: 0; transition: opacity 0.3s; pointer-events: none;
-        }
-
-        /* Footer */
-        .footer-btns { display: flex; flex-direction: column; align-items: center; gap: 10px; margin: 20px 0; }
+        /* Common Parts */
+        .footer-btns { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: auto; padding: 20px 0; }
         .kofi-btn, .home-btn {
             display: inline-flex; align-items: center; padding: 12px 20px;
-            border-radius: var(--radius); font-weight: bold; font-size: 0.9rem; text-decoration: none;
+            border-radius: var(--radius); font-weight: bold; font-size: 0.8rem; text-decoration: none;
         }
         .kofi-btn { background: var(--main); color: #fff; }
         .home-btn { background: var(--accent); color: var(--main); border: none; cursor: pointer; }
-        footer { font-size: 0.75rem; color: #bbb; }
+        footer { font-size: 0.7rem; color: #bbb; line-height: 1.6; padding-bottom: 10px; text-align: center;}
+        
+        #toast {
+            position: fixed; bottom: 80px; background: rgba(0,0,0,0.8); color: #fff;
+            padding: 8px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;
+            opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 200;
+        }
+
+        /* Modal (固定仕様:憲法遵守) */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { 
+            background: #fff; padding: 30px; border-radius: 20px; 
+            max-width: 320px; width: 90%; position: relative; text-align: left;
+        }
+        .modal-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 1.2rem; font-weight: 800;}
+        .instruction-group { margin-bottom: 15px; font-size: 0.95rem; line-height: 1.5; color: #333; }
+        .close-icon { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; color: #aaa; cursor: pointer; padding: 5px; }
+
     </style>
 </head>
 <body>
 
 <div class="fridge-container">
-    <h1>Color Snap</h1>
-    <p class="subtitle">Extract palette from images instantly.</p>
-
-    <div class="drop-zone" id="dropZone">
-        <p class="drop-label" id="dropLabel">Tap to select or drop image<br><span style="font-size: 0.7rem; font-weight: normal;">(You can also tap the image to pick specific color)</span></p>
+    <div class="preview-container" id="dropZone">
+        <p class="drop-label" id="dropLabel">Tap to select image<br><span style="font-size: 0.7rem; font-weight: normal;">(Drag on image to pick specific pixel)</span></p>
         <img id="preview" alt="Preview">
-        <canvas id="canvas" style="display:none;"></canvas>
+        <div id="loupe">
+            <canvas id="loupe-canvas" width="100" height="100"></canvas>
+            <div class="crosshair"></div>
+        </div>
     </div>
 
+    <div class="clear-btn-wrap" id="clearWrap">
+        <span class="clear-link" id="clearImage">[ Clear Image ]</span>
+    </div>
+
+    <canvas id="internalCanvas" style="display:none;"></canvas>
+    <input type="file" id="fileInput" accept="image/*" style="display:none;">
+
     <div class="result-section" id="resultSection">
-        <p class="section-label">Picked Color (Tap image to change)</p>
+        <p class="section-label">Picked Color (Copied ✓)</p>
         <div class="picked-box" id="pickedBox">
             <div class="color-preview" id="pickedDisplay"></div>
-            <div class="color-info">
-                <div class="hex-value" id="pickedHex">#000000</div>
-            </div>
+            <div class="hex-value" id="pickedHex">#000000</div>
         </div>
 
-        <p class="section-label">Auto Palette</p>
+        <p class="section-label">Auto Palette (Tap to copy)</p>
         <div class="palette-grid" id="paletteGrid"></div>
     </div>
 
-    <input type="file" id="fileInput" accept="image/*" style="display:none;">
-
     <div class="footer-btns">
-        <a href="https://ko-fi.com/afrorakda" target="_blank" class="kofi-btn">🍵 Support me on Ko-fi</a>
+        <a href="https://ko-fi.com/afrorakda" target="_blank" class="kofi-btn">
+            <span>🍵</span> Support me on Ko-fi
+        </a>
         <button class="home-btn" id="homeBtn">Add to Home Screen</button>
     </div>
 
@@ -139,23 +143,62 @@
 
 <div id="toast">Copied!</div>
 
+<div id="modal" class="modal">
+    <div class="modal-content">
+        <span class="close-icon" id="closeModal">&times;</span>
+        <div class="modal-title-row">
+            <span>📱</span>
+            <strong>Install</strong>
+        </div>
+        <p style="margin-bottom: 20px; color: #666; font-size: 0.9rem;">Add to your home screen.</p>
+        <div class="instruction-group">
+            <p>🍏 <strong>iPhone (Safari):</strong></p>
+            <p>Tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</p>
+        </div>
+        <div class="instruction-group">
+            <p>🤖 <strong>Android (Chrome):</strong></p>
+            <p>Tap <strong>Menu (⋮)</strong>, then <strong>Add to home screen</strong>.</p>
+        </div>
+    </div>
+</div>
+
 <script>
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const preview = document.getElementById('preview');
-    const canvas = document.getElementById('canvas');
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    const internalCanvas = document.getElementById('internalCanvas');
+    const ctx = internalCanvas.getContext('2d', { willReadFrequently: true });
+    
+    const loupe = document.getElementById('loupe');
+    const loupeCanvas = document.getElementById('loupe-canvas');
+    const loupeCtx = loupeCanvas.getContext('2d');
+    
     const resultSection = document.getElementById('resultSection');
     const pickedDisplay = document.getElementById('pickedDisplay');
     const pickedHex = document.getElementById('pickedHex');
     const paletteGrid = document.getElementById('paletteGrid');
+    const clearWrap = document.getElementById('clearWrap');
+    const clearImage = document.getElementById('clearImage');
     const toast = document.getElementById('toast');
+    const homeBtn = document.getElementById('homeBtn');
+    const modal = document.getElementById('modal');
+    const closeModal = document.getElementById('closeModal');
+
+    const ZOOM_SCALE = 8; // Zoom level
 
     // 1. File Selection
-    dropZone.onclick = (e) => { if(e.target !== preview) fileInput.click(); };
+    dropZone.onclick = (e) => { if(e.target !== preview && !preview.src) fileInput.click(); };
     fileInput.onchange = (e) => handleImage(e.target.files[0]);
 
-    // 2. Image Handling
+    // 2. Clear Function
+    clearImage.onclick = () => {
+        preview.src = ''; preview.style.display = 'none';
+        document.getElementById('dropLabel').style.display = 'block';
+        resultSection.style.display = 'none'; clearWrap.style.display = 'none';
+        fileInput.value = ''; loupe.style.display = 'none';
+    };
+
+    // 3. Image Handling & Auto Palette (A)
     function handleImage(file) {
         if (!file) return;
         const reader = new FileReader();
@@ -163,11 +206,11 @@
             preview.src = event.target.result;
             preview.style.display = 'block';
             document.getElementById('dropLabel').style.display = 'none';
-            resultSection.style.display = 'block';
+            resultSection.style.display = 'block'; clearWrap.style.display = 'block';
             
             preview.onload = () => {
-                canvas.width = preview.naturalWidth;
-                canvas.height = preview.naturalHeight;
+                internalCanvas.width = preview.naturalWidth;
+                internalCanvas.height = preview.naturalHeight;
                 ctx.drawImage(preview, 0, 0);
                 extractPalette();
             };
@@ -175,52 +218,94 @@
         reader.readAsDataURL(file);
     }
 
-    // 3. Auto Extract Logic (A)
     function extractPalette() {
-        const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        const data = ctx.getImageData(0, 0, internalCanvas.width, internalCanvas.height).data;
         const colorCounts = {};
-        const step = 20; // Skip pixels for speed
+        const step = 25; // Speed skip
 
         for (let i = 0; i < data.length; i += 4 * step) {
-            const r = data[i];
-            const g = data[i+1];
-            const b = data[i+2];
-            // Simplify color to reduce noise
-            const hex = rgbToHex(Math.round(r/10)*10, Math.round(g/10)*10, Math.round(b/10)*10);
+            if (data[i+3] < 128) continue; // Skip transparent
+            const hex = rgbToHex(Math.round(data[i]/15)*15, Math.round(data[i+1]/15)*15, Math.round(data[i+2]/15)*15);
             colorCounts[hex] = (colorCounts[hex] || 0) + 1;
         }
-
         const sorted = Object.keys(colorCounts).sort((a, b) => colorCounts[b] - colorCounts[a]);
         renderPalette(sorted.slice(0, 5));
-        updatePicked(sorted[0]); // Default pick to most frequent
+        updatePicked(sorted[0], false); 
     }
 
     function renderPalette(colors) {
         paletteGrid.innerHTML = '';
         colors.forEach(hex => {
             const div = document.createElement('div');
-            div.className = 'palette-item';
-            div.style.background = hex;
+            div.className = 'palette-item'; div.style.background = hex;
             div.onclick = () => copyHex(hex);
             paletteGrid.appendChild(div);
         });
     }
 
-    // 4. Point Picker Logic (B)
-    preview.onclick = (e) => {
-        const rect = preview.getBoundingClientRect();
-        const x = (e.clientX - rect.left) * (preview.naturalWidth / rect.width);
-        const y = (e.clientY - rect.top) * (preview.naturalHeight / rect.height);
-        
-        const pixel = ctx.getImageData(x, y, 1, 1).data;
-        const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-        updatePicked(hex);
-        copyHex(hex);
-    };
+    // 4. Hybrid Zoom Picker (B) - Pro mobile experience
+    let isDragging = false;
 
-    function updatePicked(hex) {
+    function handlePick(e) {
+        initAudioContext(); // For potential sound, if allowed
+        const t = e.touches ? e.touches[0] : e;
+        const rect = preview.getBoundingClientRect();
+        const offsetX = t.clientX - rect.left;
+        const offsetY = t.clientY - rect.top;
+
+        // Constraint check
+        if (offsetX < 0 || offsetX > rect.width || offsetY < 0 || offsetY > rect.height) {
+            loupe.style.display = 'none'; return;
+        }
+
+        // Show Loupe
+        loupe.style.display = 'block';
+        // Position loupe offset slightly above finger
+        loupe.style.left = `${offsetX - 50}px`;
+        loupe.style.top = `${offsetY - 120}px`;
+
+        // Canvas Coordinates
+        const cvsX = offsetX * (preview.naturalWidth / rect.width);
+        const cvsY = offsetY * (preview.naturalHeight / rect.height);
+
+        // Render Zoom Canvas (pixelated)
+        loupeCtx.save();
+        loupeCtx.clearRect(0, 0, 100, 100);
+        loupeCtx.translate(50, 50); // Center zoom
+        loupeCtx.scale(ZOOM_SCALE, ZOOM_SCALE);
+        loupeCtx.imageSmoothingEnabled = false; // Keep pixels sharp
+        loupeCtx.drawImage(internalCanvas, cvsX, cvsY, 1, 1, -0.5, -0.5, 1, 1);
+        loupeCtx.restore();
+
+        // Get exact center pixel color
+        const pixel = ctx.getImageData(cvsX, cvsY, 1, 1).data;
+        if (pixel[3] < 10) return; // Skip almost transparent
+        const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+        updatePicked(hex, false);
+    }
+
+    function finalizePick(e) {
+        if (!preview.src) return;
+        loupe.style.display = 'none';
+        copyHex(pickedHex.textContent);
+    }
+
+    // Touch/Mouse Events
+    preview.addEventListener('touchstart', (e) => { if(preview.src) { isDragging = true; e.preventDefault(); handlePick(e); }});
+    preview.addEventListener('touchmove', (e) => { if(isDragging) { e.preventDefault(); handlePick(e); }});
+    preview.addEventListener('touchend', () => { isDragging = false; finalizePick(); });
+    
+    // Mouse fallback for desktop
+    preview.addEventListener('mousedown', (e) => { if(preview.src) { isDragging = true; handlePick(e); }});
+    preview.addEventListener('mousemove', (e) => { if(isDragging) handlePick(e); });
+    preview.addEventListener('mouseup', () => { isDragging = false; finalizePick(); });
+    preview.addEventListener('mouseleave', () => { loupe.style.display = 'none'; });
+
+    // Common Helpers
+    function updatePicked(hex, doCopy) {
         pickedDisplay.style.background = hex;
         pickedHex.textContent = hex.toUpperCase();
+        if (doCopy) copyHex(hex);
     }
 
     function rgbToHex(r, g, b) {
@@ -228,15 +313,24 @@
     }
 
     function copyHex(hex) {
-        navigator.clipboard.writeText(hex.toUpperCase());
-        showToast(`Copied: ${hex.toUpperCase()}`);
+        navigator.clipboard.writeText(hex.toUpperCase()).then(() => {
+            showToast(`Copied: ${hex.toUpperCase()}`);
+        });
     }
 
     function showToast(msg) {
-        toast.textContent = msg;
-        toast.style.opacity = '1';
-        setTimeout(() => toast.style.opacity = '0', 2000);
+        toast.textContent = msg; toast.style.opacity = '1';
+        setTimeout(() => toast.style.opacity = '0', 1800);
     }
+
+    let audioCtx = null; // Potential future use
+    function initAudioContext() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+
+    // Modal (固定仕様)
+    homeBtn.onclick = () => modal.style.display = 'flex';
+    closeModal.onclick = () => modal.style.display = 'none';
+    window.onclick = (e) => { if (e.target == modal) modal.style.display = 'none'; };
+
 </script>
 
 </body>
