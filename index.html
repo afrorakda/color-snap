@@ -3,19 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <title>Color Snap - Fridge Combo</title>
     <link rel="apple-touch-icon" href="image_22.png">
     <link rel="icon" type="image/png" href="image_22.png">
     <style>
         :root {
             --bg: #fff;
-            --main: #333; /* #333固定 */
+            --main: #333;
             --accent: #eee;
+            --input-bg: #fafafa;
             --radius: 15px;
+            --placeholder: #bbb;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+            margin: 0; 
+            padding: 0; 
+        }
+
         body {
             background-color: var(--bg);
             color: var(--main);
@@ -24,31 +33,42 @@
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
-            /* iPhoneノッチ回避余白 */
-            padding-top: calc(env(safe-area-inset-top, 20px) + 15px); 
-            padding-left: 15px;
-            padding-right: 15px;
-            padding-bottom: calc(env(safe-area-inset-bottom, 10px) + 15px);
+            -webkit-font-smoothing: antialiased;
+            padding: calc(env(safe-area-inset-top, 20px) + 10px) 20px env(safe-area-inset-bottom, 20px);
         }
 
         .fridge-container {
             width: 100%;
-            max-width: 420px;
+            max-width: 400px;
             display: flex;
             flex-direction: column;
-            align-items: center;
+            flex-grow: 1;
         }
 
-        /* ★復活：ヘッダー */
-        header { text-align: center; margin-bottom: 25px; }
-        h1 { font-size: 2rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 5px; }
-        .subtitle { color: #999; font-size: 0.85rem; font-weight: 500; }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
 
-        /* Drop & Preview Area */
+        h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: -1px; }
+
+        .hub-link {
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 800;
+            color: var(--main);
+            background: var(--accent);
+            padding: 8px 12px;
+            border-radius: 10px;
+        }
+
+        /* Preview Area */
         .preview-container {
             width: 100%;
             aspect-ratio: 1 / 1;
-            background: #fafafa;
+            background: var(--input-bg);
             border: 2px dashed var(--accent);
             border-radius: var(--radius);
             display: flex;
@@ -62,7 +82,7 @@
         }
         .preview-container.active { border-color: var(--main); background: #f0f0f0; }
         .preview-container img { width: 100%; height: 100%; object-fit: contain; display: none; touch-action: none; }
-        .drop-label { color: #aaa; font-size: 0.9rem; font-weight: 600; padding: 20px; text-align: center; z-index: 10; }
+        .drop-label { color: var(--placeholder); font-size: 0.9rem; font-weight: 600; padding: 20px; text-align: center; z-index: 10; line-height: 1.4; }
 
         /* Zoom Loupe */
         #loupe {
@@ -74,7 +94,7 @@
         #loupe-canvas { 
             position: absolute; top: 50%; left: 50%; 
             transform: translate(-50%, -50%); 
-            image-rendering: pixelated; /* ピクセルを鮮明に */
+            image-rendering: pixelated; 
         }
         .crosshair {
             position: absolute; top: 0; left: 0; width: 100px; height: 100px;
@@ -86,52 +106,72 @@
         .crosshair::before { width: 100%; height: 1px; top: 50%; left: 0; transform: translateY(-50%); }
         .crosshair::after { width: 1px; height: 100%; top: 0; left: 50%; transform: translateX(-50%); }
 
-        /* Clear Function */
         .clear-btn-wrap { text-align: right; margin-bottom: 15px; display: none; width: 100%; }
-        .clear-link { font-size: 0.8rem; color: #999; cursor: pointer; text-decoration: underline; }
+        .clear-link { font-size: 0.8rem; color: #999; cursor: pointer; font-weight: 600; }
 
         /* Results */
         .result-section { display: none; width: 100%; text-align: left; }
-        .section-label { font-size: 0.7rem; font-weight: 800; color: #bbb; text-transform: uppercase; margin-bottom: 8px; }
+        .section-label { font-size: 0.7rem; font-weight: 800; color: #bbb; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
 
         .picked-box {
-            display: flex; align-items: center; gap: 12px; background: #fafafa;
-            padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--accent);
+            display: flex; align-items: center; gap: 12px; background: var(--input-bg);
+            padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 2px solid var(--accent);
         }
         .color-preview { width: 45px; height: 45px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); }
         .hex-value { font-size: 1.1rem; font-weight: 800; color: var(--main); }
 
         .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 7px; margin-bottom: 25px; }
-        .palette-item { aspect-ratio: 1/1; border-radius: 8px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); transition: transform 0.1s; }
+        .palette-item { aspect-ratio: 1/1; border-radius: 10px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); transition: transform 0.1s; }
         .palette-item:active { transform: scale(0.9); }
 
         /* Feedback Toast */
         #toast {
-            position: fixed; bottom: 80px; background: rgba(0,0,0,0.8); color: #fff;
-            padding: 8px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: bold;
+            position: fixed; bottom: 80px; background: var(--main); color: #fff;
+            padding: 10px 20px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;
             opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 200;
         }
 
         /* Footer */
-        .footer-btns { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: auto; padding: 20px 0; width: 100%; }
+        .footer-btns { 
+            margin-top: auto;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            gap: 12px; 
+            padding: 40px 0 30px; 
+        }
         .kofi-btn, .home-btn {
-            display: inline-flex; align-items: center; padding: 12px 20px;
-            border-radius: var(--radius); font-weight: bold; font-size: 0.85rem; text-decoration: none;
+            width: 100%;
+            max-width: 250px;
+            padding: 14px;
+            border-radius: var(--radius);
+            font-weight: 800;
+            font-size: 0.9rem;
+            text-decoration: none;
+            text-align: center;
+            border: none;
+            cursor: pointer;
         }
-        .kofi-btn { background: var(--main); color: #fff; }
-        .home-btn { background: var(--accent); color: var(--main); border: none; cursor: pointer; }
+        .kofi-btn { background: #fff; color: var(--main); border: 2px solid var(--main); }
+        .home-btn { background: var(--accent); color: var(--main); }
 
-        footer { font-size: 0.7rem; color: #bbb; line-height: 1.6; padding-bottom: 10px; text-align: center; }
+        footer { 
+            font-size: 0.75rem; 
+            color: #bbb; 
+            text-align: center; 
+            padding-bottom: 20px;
+            font-weight: 600;
+            line-height: 1.6;
+        }
+        footer a { color: inherit; text-decoration: underline; }
 
-        /* Modal (固定仕様) */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        /* Modal */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { 
-            background: #fff; padding: 30px; border-radius: 20px; 
-            max-width: 320px; width: 90%; position: relative; text-align: left;
+            background: #fff; padding: 30px; border-radius: var(--radius); 
+            width: 85%; max-width: 320px; position: relative; text-align: center;
         }
-        .modal-title-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 1.2rem; font-weight: 800;}
-        .instruction-group { margin-bottom: 15px; font-size: 0.95rem; line-height: 1.5; color: #333; }
-        .close-icon { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; color: #aaa; cursor: pointer; padding: 5px; }
+        .close-icon { position: absolute; top: 10px; right: 15px; font-size: 1.5rem; color: #aaa; cursor: pointer; font-weight: bold; }
 
     </style>
 </head>
@@ -140,11 +180,11 @@
 <div class="fridge-container">
     <header>
         <h1>Color Snap</h1>
-        <p class="subtitle">Extract palette from images instantly.</p>
+        <a href="https://afrorakda.github.io/" class="hub-link">🏠 Hub</a>
     </header>
 
     <div class="preview-container" id="dropZone">
-        <p class="drop-label" id="dropLabel">Tap to select image<br><span style="font-size: 0.7rem; font-weight: normal;">(Drag on image to pick specific pixel)</span></p>
+        <p class="drop-label" id="dropLabel">Tap to select image<br><span style="font-size: 0.7rem;">(Drag to pick a pixel)</span></p>
         <img id="preview" alt="Preview">
         <div id="loupe">
             <canvas id="loupe-canvas" width="100" height="100"></canvas>
@@ -153,32 +193,31 @@
     </div>
 
     <div class="clear-btn-wrap" id="clearWrap">
-        <span class="clear-link" id="clearImage">[ Clear Image ]</span>
+        <span class="clear-link" id="clearImage">✕ Clear Image</span>
     </div>
 
     <canvas id="internalCanvas" style="display:none;"></canvas>
     <input type="file" id="fileInput" accept="image/*" style="display:none;">
 
     <div class="result-section" id="resultSection">
-        <p class="section-label">Picked Color (Copied ✓)</p>
+        <p class="section-label">Picked Color</p>
         <div class="picked-box" id="pickedBox">
             <div class="color-preview" id="pickedDisplay"></div>
             <div class="hex-value" id="pickedHex">#000000</div>
         </div>
 
-        <p class="section-label">Auto Palette (Tap to copy)</p>
+        <p class="section-label">Auto Palette</p>
         <div class="palette-grid" id="paletteGrid"></div>
     </div>
 
     <div class="footer-btns">
-        <a href="https://ko-fi.com/afrorakda" target="_blank" class="kofi-btn">
-            <span>🍵</span> Support me on Ko-fi
-        </a>
+        <a href="https://ko-fi.com/afrorakda" target="_blank" class="kofi-btn">☕️Buy me a coffee</a>
         <button class="home-btn" id="homeBtn">Add to Home Screen</button>
     </div>
 
-    <footer>
+    <footer id="dynamicFooter">
         No login / No tracking / No ads / Browser only<br>
+        <a href="https://afrorakda.com/privacy/">Privacy Policy</a><br>
         afrorakda © 2026
     </footer>
 </div>
@@ -188,18 +227,11 @@
 <div id="modal" class="modal">
     <div class="modal-content">
         <span class="close-icon" id="closeModal">&times;</span>
-        <div class="modal-title-row">
-            <span>📱</span>
-            <strong>Install</strong>
-        </div>
-        <p style="margin-bottom: 20px; color: #666; font-size: 0.9rem;">Add to your home screen.</p>
-        <div class="instruction-group">
-            <p>🍏 <strong>iPhone (Safari):</strong></p>
-            <p>Tap <strong>Share</strong>, then <strong>Add to Home Screen</strong>.</p>
-        </div>
-        <div class="instruction-group">
-            <p>🤖 <strong>Android (Chrome):</strong></p>
-            <p>Tap <strong>Menu (⋮)</strong>, then <strong>Add to home screen</strong>.</p>
+        <h3 style="margin-top:0; font-weight:800">📱 Install</h3>
+        <p style="margin: 15px 0; color: #666; font-size: 0.9rem;">Add to your home screen.</p>
+        <div style="text-align: left; font-size: 0.9rem; line-height: 1.6;">
+            <p>🍏 <b>iPhone (Safari):</b><br>Share > Add to Home Screen</p><br>
+            <p>🤖 <b>Android (Chrome):</b><br>Menu (⋮) > Add to home screen</p>
         </div>
     </div>
 </div>
@@ -226,18 +258,15 @@
     const modal = document.getElementById('modal');
     const closeModal = document.getElementById('closeModal');
 
-    const ZOOM_SCALE = 8; // Zoom level
+    const ZOOM_SCALE = 8;
 
-    // 1. File Selection & ★修正：タップ感度の改善
     dropZone.onclick = (e) => {
-        // 画像が表示されていない時、またはラベルがタップされた時にファイル選択を開く
         if (!preview.src || preview.style.display === 'none' || e.target.id === 'dropLabel') {
             fileInput.click();
         }
     };
     fileInput.onchange = (e) => handleImage(e.target.files[0]);
 
-    // Drag & Drop
     dropZone.ondragover = (e) => { e.preventDefault(); dropZone.classList.add('active'); };
     dropZone.ondragleave = () => { dropZone.classList.remove('active'); };
     dropZone.ondrop = (e) => {
@@ -245,17 +274,14 @@
         handleImage(e.dataTransfer.files[0]);
     };
 
-    // 2. Clear Function
     clearImage.onclick = () => {
         preview.src = ''; preview.style.display = 'none';
         document.getElementById('dropLabel').style.display = 'block';
         resultSection.style.display = 'none'; clearWrap.style.display = 'none';
         fileInput.value = ''; loupe.style.display = 'none';
-        // z-indexをリセットしてタップできるように
         dropZone.style.zIndex = '';
     };
 
-    // 3. Image Handling & Auto Palette (A)
     function handleImage(file) {
         if (!file) return;
         const reader = new FileReader();
@@ -264,7 +290,6 @@
             preview.style.display = 'block';
             document.getElementById('dropLabel').style.display = 'none';
             resultSection.style.display = 'block'; clearWrap.style.display = 'block';
-            // 画像が読み込まれたらz-indexを調整してズーム機能を有効に
             dropZone.style.zIndex = '5';
             
             preview.onload = () => {
@@ -280,17 +305,15 @@
     function extractPalette() {
         const data = ctx.getImageData(0, 0, internalCanvas.width, internalCanvas.height).data;
         const colorCounts = {};
-        const step = 25; // Speed skip
+        const step = 25; 
 
         for (let i = 0; i < data.length; i += 4 * step) {
-            if (data[i+3] < 128) continue; // Skip transparent
-            // Simplify color to reduce noise
+            if (data[i+3] < 128) continue; 
             const hex = rgbToHex(Math.round(data[i]/15)*15, Math.round(data[i+1]/15)*15, Math.round(data[i+2]/15)*15);
             colorCounts[hex] = (colorCounts[hex] || 0) + 1;
         }
         const sorted = Object.keys(colorCounts).sort((a, b) => colorCounts[b] - colorCounts[a]);
         renderPalette(sorted.slice(0, 5));
-        // Default pick to most frequent (but don't copy)
         updatePicked(sorted[0], false); 
     }
 
@@ -304,7 +327,6 @@
         });
     }
 
-    // 4. Hybrid Zoom Picker (B) - ★修正：エイミング精度の修正
     let isDragging = false;
 
     function handlePick(e) {
@@ -312,79 +334,58 @@
         const t = e.touches ? e.touches[0] : e;
         const rect = preview.getBoundingClientRect();
         
-        // 1. 表示エリア内での相対座標 (px)
         const displayX = t.clientX - rect.left;
         const displayY = t.clientY - rect.top;
 
-        // Constraint check
         if (displayX < 0 || displayX > rect.width || displayY < 0 || displayY > rect.height) {
             loupe.style.display = 'none'; return;
         }
 
-        // Show Loupe
         loupe.style.display = 'block';
-        // Position loupe: 指の少し上、中央に
         loupe.style.left = `${displayX - 50}px`;
-        loupe.style.top = `${displayY - 130}px`; // 120 -> 130 視認性向上のため少し上へ
+        loupe.style.top = `${displayY - 130}px`; 
 
-        // 2. ★エイミング修正の核心：実際のCanvas座標への変換
-        // object-fit: contain の場合、表示矩形と画像の縦横比がズレる。
-        // preview.naturalWidth / preview.naturalHeight は画像の元サイズ。
-        // rect.width / rect.height は画面上の表示サイズ。
-        
-        // 画像の元サイズと表示サイズの比率
         const scaleX = preview.naturalWidth / rect.width;
         const scaleY = preview.naturalHeight / rect.height;
-        
-        // どちらか大きい方の比率に合わせて全体がフィットしている
         const fitScale = Math.max(scaleX, scaleY);
         
-        // 画像がCanvasの中央に配置されていると仮定した場合のオフセット (px)
         const imgDisplayWidth = preview.naturalWidth / fitScale;
         const imgDisplayHeight = preview.naturalHeight / fitScale;
         const offsetX = (rect.width - imgDisplayWidth) / 2;
         const offsetY = (rect.height - imgDisplayHeight) / 2;
 
-        // 画像の表示エリア内での座標に変換
         const imgX = displayX - offsetX;
         const imgY = displayY - offsetY;
 
-        // 画像の表示エリア外をタップした場合は無視
         if (imgX < 0 || imgX > imgDisplayWidth || imgY < 0 || imgY > imgDisplayHeight) {
             loupe.style.display = 'none'; return;
         }
 
-        // 最終的なCanvas上の座標
         const cvsX = imgX * fitScale;
         const cvsY = imgY * fitScale;
 
-        // 3. Render Zoom Canvas (pixelated)
         loupeCtx.save();
         loupeCtx.clearRect(0, 0, 100, 100);
-        loupeCtx.translate(50, 50); // Center zoom
+        loupeCtx.translate(50, 50); 
         loupeCtx.scale(ZOOM_SCALE, ZOOM_SCALE);
-        loupeCtx.imageSmoothingEnabled = false; // Keep pixels sharp
+        loupeCtx.imageSmoothingEnabled = false; 
         
-        // internalCanvasから狙った1ピクセルを抜き出して拡大
         loupeCtx.drawImage(internalCanvas, cvsX, cvsY, 1, 1, -0.5, -0.5, 1, 1);
         loupeCtx.restore();
 
-        // 4. Get exact center pixel color
         const pixel = ctx.getImageData(cvsX, cvsY, 1, 1).data;
-        if (pixel[3] < 10) return; // Skip almost transparent
+        if (pixel[3] < 10) return; 
         const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
-        updatePicked(hex, false); // 表示を更新するがコピーはしない
+        updatePicked(hex, false); 
     }
 
     function finalizePick() {
         if (!preview.src || !isDragging) return;
         isDragging = false;
         loupe.style.display = 'none';
-        // 指を離した瞬間の色を確定してコピー
         copyHex(pickedHex.textContent);
     }
 
-    // Touch/Mouse Events - ★修正：タッチイベントの競合を回避
     dropZone.addEventListener('touchstart', (e) => { 
         if(preview.src && preview.style.display !== 'none') {
             isDragging = true; e.preventDefault(); handlePick(e);
@@ -397,7 +398,6 @@
 
     dropZone.addEventListener('touchend', finalizePick);
     
-    // Mouse fallback for desktop
     dropZone.addEventListener('mousedown', (e) => { 
         if(preview.src && preview.style.display !== 'none' && e.target.id === 'preview') {
             isDragging = true; handlePick(e);
@@ -407,7 +407,6 @@
     dropZone.addEventListener('mouseup', finalizePick);
     dropZone.addEventListener('mouseleave', () => { if(isDragging) finalizePick(); loupe.style.display = 'none'; });
 
-    // Common Helpers
     function updatePicked(hex, doCopy) {
         pickedDisplay.style.background = hex;
         pickedHex.textContent = hex.toUpperCase();
@@ -419,7 +418,7 @@
     }
 
     function copyHex(hex) {
-        if (!hex || hex === '#000000' && !preview.src) return; // 初期状態でのコピーを防ぐ
+        if (!hex || (hex === '#000000' && !preview.src)) return;
         navigator.clipboard.writeText(hex.toUpperCase()).then(() => {
             showToast(`Copied: ${hex.toUpperCase()}`);
         });
@@ -430,11 +429,22 @@
         setTimeout(() => toast.style.opacity = '0', 1800);
     }
 
-    // Modal (固定仕様)
     homeBtn.onclick = () => modal.style.display = 'flex';
     closeModal.onclick = () => modal.style.display = 'none';
     window.onclick = (e) => { if (e.target == modal) modal.style.display = 'none'; };
 
+    async function loadFooter() {
+        try {
+            const res = await fetch('footer.json');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.footerHtml) {
+                    document.getElementById('dynamicFooter').innerHTML = data.footerHtml;
+                }
+            }
+        } catch(e) {}
+    }
+    window.onload = loadFooter;
 </script>
 
 </body>
