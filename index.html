@@ -64,7 +64,6 @@
             border-radius: 10px;
         }
 
-        /* Preview Area */
         .preview-container {
             width: 100%;
             aspect-ratio: 1 / 1;
@@ -84,7 +83,6 @@
         .preview-container img { width: 100%; height: 100%; object-fit: contain; display: none; touch-action: none; }
         .drop-label { color: var(--placeholder); font-size: 0.9rem; font-weight: 600; padding: 20px; text-align: center; z-index: 10; line-height: 1.4; }
 
-        /* Zoom Loupe */
         #loupe {
             position: absolute; width: 100px; height: 100px;
             border-radius: 50%; border: 3px solid #fff;
@@ -109,7 +107,6 @@
         .clear-btn-wrap { text-align: right; margin-bottom: 15px; display: none; width: 100%; }
         .clear-link { font-size: 0.8rem; color: #999; cursor: pointer; font-weight: 600; }
 
-        /* Results */
         .result-section { display: none; width: 100%; text-align: left; }
         .section-label { font-size: 0.7rem; font-weight: 800; color: #bbb; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
 
@@ -124,14 +121,12 @@
         .palette-item { aspect-ratio: 1/1; border-radius: 10px; cursor: pointer; border: 1px solid rgba(0,0,0,0.05); transition: transform 0.1s; }
         .palette-item:active { transform: scale(0.9); }
 
-        /* Feedback Toast */
         #toast {
             position: fixed; bottom: 80px; background: var(--main); color: #fff;
             padding: 10px 20px; border-radius: 20px; font-size: 0.8rem; font-weight: 800;
             opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 200;
         }
 
-        /* Footer */
         .footer-btns { 
             margin-top: auto;
             display: flex; 
@@ -165,7 +160,6 @@
         }
         footer a { color: inherit; text-decoration: underline; }
 
-        /* Modal */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { 
             background: #fff; padding: 30px; border-radius: var(--radius); 
