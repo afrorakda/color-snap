@@ -79,7 +79,7 @@
             justify-content: center;
             overflow: hidden;
             position: relative;
-            margin-bottom: 10px;
+            margin-bottom: 5px; /* クリアボタンに寄せるため調整 */
             cursor: pointer;
         }
         .preview-container img { width: 100%; height: 100%; object-fit: contain; display: none; touch-action: none; }
@@ -93,26 +93,31 @@
         }
         #loupe-canvas { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); image-rendering: pixelated; }
         
-        .clear-btn-wrap { text-align: right; margin-bottom: 15px; display: none; width: 100%; }
-        .clear-link { font-size: 0.8rem; color: #999; cursor: pointer; font-weight: 600; }
+        /* ✕ クリアボタン：画像直下に配置 */
+        .clear-btn-wrap { text-align: right; margin-bottom: 15px; display: none; width: 100%; padding-right: 5px; }
+        .clear-link { font-size: 0.75rem; color: #999; cursor: pointer; font-weight: 800; }
 
         .result-section { display: none; width: 100%; text-align: left; }
         .section-label { font-size: 0.7rem; font-weight: 800; color: #bbb; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
 
-        /* ピックアップ表示窓：タップでコピー */
+        /* ピックアップ表示窓：タップ時の手応えを追加 */
         .picked-box {
             display: flex; align-items: center; gap: 12px; background: var(--input-bg);
             padding: 12px; border-radius: 12px; margin-bottom: 20px; border: 2px solid var(--accent);
             cursor: pointer;
+            transition: transform 0.1s, background 0.1s;
         }
-        .picked-box:active { background: var(--accent); }
+        .picked-box:active { 
+            transform: scale(0.97); /* 物理的な手応え */
+            background: var(--accent); 
+        }
         .color-preview { width: 45px; height: 45px; border-radius: 10px; border: 1px solid rgba(0,0,0,0.1); }
         .hex-value { font-size: 1.1rem; font-weight: 800; color: var(--main); }
 
-        /* パレットグリッド：色名を下に追加 */
+        /* パレットグリッド */
         .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 25px; }
         .palette-cell { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; }
-        .palette-item { width: 100%; aspect-ratio: 1/1; border-radius: 10px; border: 1px solid rgba(0,0,0,0.05); }
+        .palette-item { width: 100%; aspect-ratio: 1/1; border-radius: 10px; border: 1px solid rgba(0,0,0,0.05); transition: transform 0.1s; }
         .palette-hex { font-size: 0.6rem; font-weight: 800; color: #999; text-transform: uppercase; }
         .palette-cell:active .palette-item { transform: scale(0.9); }
 
@@ -190,7 +195,7 @@
     <div class="modal-content">
         <span class="close-icon" id="closeModal">&times;</span>
         <h3 style="margin-top:0; font-weight:800">📱 Install</h3>
-        <p style="margin: 15px 0; color: #666; font-size: 0.9rem;">Add to home screen.</p>
+        <p style="margin: 15px 0; color: #666; font-size: 0.9rem;">Add to your home screen.</p>
         <div style="text-align: left; font-size: 0.9rem; line-height: 1.6;">
             <p>🍏 <b>iPhone (Safari):</b><br>Share > Add to Home Screen</p><br>
             <p>🤖 <b>Android (Chrome):</b><br>Menu (⋮) > Add to home screen</p>
