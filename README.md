@@ -1,23 +1,24 @@
-# Color Snap
+# Color Snap (Fridge Combo #22)
 
-Part of the Fridge Combo project. A high-precision color extractor that works entirely in your browser.
+An instant color palette extractor. Drag to pick specific pixels or get an auto-generated palette from any image.
 
-## 1 Tool / 1 Action
+## Core Philosophy
+- **1 Tool / 1 Action**: Specialized in color extraction.
+- **Privacy First**: No server uploads. Image processing happens entirely in your browser.
+- **High Precision**: Built-in loupe for pixel-perfect color picking on mobile and desktop.
 
-Extract HEX color codes from any image instantly. **Color Snap** automatically generates a 5-color palette from your image and allows you to "snipe" specific pixels using a hybrid zoom loupe.
+## Features
+- **Pixel Picker**: Drag over the image to see a magnified view and snap the exact HEX code.
+- **Auto Palette**: Automatically extracts the 5 most dominant colors from the uploaded image.
+- **Smart Copy**: Tapping any color box or finishing a pick instantly copies the HEX to your clipboard.
+- **Clean Slate**: One-tap clear to protect your workspace privacy.
 
-## Philosophy
-* **1 Tool, 1 Action.**
-* **No Login / No Ads / No Tracking**
-* **Browser-only Privacy:** Your images never leave your device. 100% offline processing using Canvas API.
+## Design System
+- **Background**: #fff
+- **Main Accent**: #333
+- **Radius**: 15px (Constitutional Rule)
+- **UI**: Minimalist #fafafa input areas with high-contrast typography.
 
-## How to Use
-1. **Upload:** Tap the drop zone to select an image or drag and drop.
-2. **Auto Palette:** View the 5 dominant colors automatically extracted from the image.
-3. **Precision Pick:** Drag your finger (or mouse) over the image to activate the **Zoom Loupe**. Align the crosshair to the exact pixel you want.
-4. **Copy:** Tap any color chip or release your finger from the loupe to copy the HEX code to your clipboard.
-5. **Clear:** Use [ Clear Image ] to reset and start over.
-
----
-No login / No tracking / No ads / Browser only Privacy Policy  
-**afrorakda © 2026**
+## License
+afrorakda © 2026
+No login / No tracking / No ads / Browser only Privacy Policy
